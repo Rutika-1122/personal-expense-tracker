@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Expense Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <span class="logo-icon">💳</span>
+                <h2>Expense Tracker</h2>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-tab="dashboard">
+                    <span class="icon">📊</span> Dashboard
+                </button>
+                <button class="nav-btn" data-tab="transactions">
+                    <span class="icon">📝</span> Transactions
+                </button>
+                <button class="nav-btn" data-tab="analytics">
+                    <span class="icon">📈</span> Analytics
+                </button>
+                <button class="nav-btn" data-tab="db-info">
+                    <span class="icon">🗄️</span> Database Architecture
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="top-bar">
+                <h1 id="page-title">Dashboard</h1>
+                <div class="header-actions">
+                    <button id="add-expense-btn" class="btn btn-primary">+ Add Expense</button>
+                </div>
+            </header>
+
+            <!-- Dashboard View -->
+            <section id="dashboard-view" class="view-tab active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-icon">💰</span>
+                        <div>
+                            <span class="stat-label">Total Spent</span>
+                            <h3 id="total-spending">$0.00</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">📅</span>
+                        <div>
+                            <span class="stat-label">This Month</span>
+                            <h3 id="month-spending">$0.00</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-icon">📊</span>
+                        <div>
+                            <span class="stat-label">Total Transactions</span>
+                            <h3 id="total-count">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="card chart-card">
+                        <h3>Category Breakdown</h3>
+                        <div class="chart-container">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card recent-card">
+                        <div class="card-header">
+                            <h3>Recent Transactions</h3>
+                            <button class="btn btn-link" id="view-all-btn">View All</button>
+                        </div>
+                        <ul id="recent-transactions-list" class="transaction-list"></ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Transactions View -->
+            <section id="transactions-view" class="view-tab">
+                <div class="card">
+                    <div class="filter-bar">
+                        <input type="text" id="search-input" placeholder="Search description...">
+                        <select id="category-filter">
+                            <option value="ALL">All Categories</option>
+                            <option value="Food & Dining">Food & Dining</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Transportation">Transportation</option>
+                            <option value="Bills & Utilities">Bills & Utilities</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <select id="sort-by">
+                            <option value="date-desc">Date (Newest)</option>
+                            <option value="date-asc">Date (Oldest)</option>
+                            <option value="amount-desc">Amount (High to Low)</option>
+                            <option value="amount-asc">Amount (Low to High)</option>
+                        </select>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="full-transactions-list"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Analytics View -->
+            <section id="analytics-view" class="view-tab">
+                <div class="card chart-card-large">
+                    <h3>Spending Trends</h3>
+                    <div class="chart-container-large">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Database Info View -->
+            <section id="db-info-view" class="view-tab">
+                <div class="card architecture-card">
+                    <h2>LocalStorage to Database Migration Architecture</h2>
+                    <p class="subtitle">How this client-side prototype can scale into a full-stack enterprise application.</p>
+                    
+                    <div class="architecture-grid">
+                        <div class="arch-box">
+                            <h3>1. Storage Comparison</h3>
+                            <ul>
+                                <li><strong>Current (localStorage):</strong> Synchronous, limited to ~5MB, scoped to single browser/device, no multi-user capability.</li>
+                                <li><strong>Database (SQL/NoSQL):</strong> Persistent, dynamic queries, scalable, multi-user authentication, server-side encryption.</li>
+                            </ul>
+                        </div>
+
+                        <div class="arch-box">
+                            <h3>2. Database Schema Design (SQL)</h3>
+                            <pre><code>CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    icon VARCHAR(10)
+);
+
+CREATE TABLE expenses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    category_id INT REFERENCES categories(id),
+    amount DECIMAL(10, 2) NOT NULL,
+    description TEXT,
+    expense_date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);</code></pre>
+                        </div>
+
+                        <div class="arch-box">
+                            <h3>3. Backend REST API Routes</h3>
+                            <ul>
+                                <li><code>POST /api/v1/auth/register</code> - Register user</li>
+                                <li><code>POST /api/v1/auth/login</code> - JWT authentication</li>
+                                <li><code>GET /api/v1/expenses</code> - Fetch user expenses with query filters</li>
+                                <li><code>POST /api/v1/expenses</code> - Create expense record</li>
+                                <li><code>PUT /api/v1/expenses/:id</code> - Update existing expense</li>
+                                <li><code>DELETE /api/v1/expenses/:id</code> - Remove expense</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal Form for Add/Edit Expense -->
+    <div id="expense-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Add New Expense</h3>
+                <span class="close-btn">&times;</span>
+            </div>
+            <form id="expense-form">
+                <input type="hidden" id="expense-id">
+                
+                <div class="form-group">
+                    <label for="amount">Amount ($)</label>
+                    <input type="number" id="amount" step="0.01" min="0.01" required placeholder="0.00">
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" required>
+                        <option value="">Select Category</option>
+                        <option value="Food & Dining">Food & Dining</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Transportation">Transportation</option>
+                        <option value="Bills & Utilities">Bills & Utilities</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="expense-date">Date</label>
+                    <input type="date" id="expense-date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <input type="text" id="description" required placeholder="What did you spend on?">
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
